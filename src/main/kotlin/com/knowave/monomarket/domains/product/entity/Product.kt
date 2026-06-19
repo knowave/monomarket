@@ -27,5 +27,11 @@ class Product(
     var price: Long,
 
     @Column(nullable = false)
-    var status: String = ProductStatus.ON_SALE.name
+    var status: String = ProductStatus.ON_SALE.name,
+
+    @Column(nullable = false)
+    var viewCount: Long = 0,
+
+    @Column(nullable = false)
+    var favoriteCount: Long = 0
 ) : BaseEntity()
