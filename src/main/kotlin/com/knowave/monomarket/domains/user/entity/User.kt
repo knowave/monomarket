@@ -1,6 +1,7 @@
 package com.knowave.monomarket.domains.user.entity
 
 import com.knowave.monomarket.common.entity.BaseEntity
+import com.knowave.monomarket.common.enum.UserStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Table
@@ -15,5 +16,5 @@ class User(
     var profileImageUrl: String? = null,
 
     @Column(nullable = false )
-    var status: String = "ACTIVE",
+    var status: String = UserStatus.ACTIVE.name,
 ) : BaseEntity()
