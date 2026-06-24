@@ -7,9 +7,11 @@ import com.knowave.monomarket.domains.auth.dto.RefreshTokenResponse
 import com.knowave.monomarket.domains.auth.dto.SocialLoginRequest
 import com.knowave.monomarket.domains.auth.dto.SocialLoginResponse
 import com.knowave.monomarket.domains.auth.dto.SocialUserInfo
+import com.knowave.monomarket.domains.auth.entity.RefreshToken
 import com.knowave.monomarket.domains.auth.jwt.JwtProvider
 import com.knowave.monomarket.domains.auth.jwt.JwtTokenType
 import com.knowave.monomarket.domains.auth.provider.SocialTokenVerifier
+import com.knowave.monomarket.domains.auth.repository.RefreshTokenRepository
 import com.knowave.monomarket.domains.user.entity.SocialAccount
 import com.knowave.monomarket.domains.user.entity.User
 import com.knowave.monomarket.domains.user.repository.SocialAccountRepository
@@ -17,11 +19,14 @@ import com.knowave.monomarket.domains.user.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Service
 class AuthService(
     private val socialTokenVerifiers: List<SocialTokenVerifier>,
     private val socialAccountRepository: SocialAccountRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
     private val userService: UserService,
     private val jwtProvider: JwtProvider,
 ) {
@@ -52,9 +57,18 @@ class AuthService(
         }
 
         val userId = requireNotNull(user.id) { "User id must be generated before issuing JWT." }
+        val refreshToken = jwtProvider.issueRefreshToken(userId)
+        saveRefreshToken(
+            user = user,
+            token = refreshToken.token,
+            deviceId = request.deviceId,
+            deviceName = request.deviceName,
+            expiresAt = LocalDateTime.ofInstant(refreshToken.expiresAt, ZoneId.systemDefault()),
+        )
+
         return SocialLoginResponse(
             accessToken = jwtProvider.generateAccessToken(userId),
-            refreshToken = jwtProvider.generateRefreshToken(userId),
+            refreshToken = refreshToken.token,
             isNewUser = isNewUser,
         )
     }
@@ -71,9 +85,28 @@ class AuthService(
         }
 
         val userId = jwtProvider.extractUserId(request.refreshToken)
-        if (!userService.existsById(userId)) {
+        val refreshToken = refreshTokenRepository.findByToken(request.refreshToken)
+            ?: throw invalidRefreshTokenException()
+        if (refreshToken.user.id != userId) {
             throw invalidRefreshTokenException()
         }
+        if (refreshToken.deviceId != request.deviceId) {
+            throw invalidRefreshTokenException()
+        }
+        if (refreshToken.revokedAt != null) {
+            throw invalidRefreshTokenException()
+        }
+        if (refreshToken.expiresAt.isBefore(LocalDateTime.now())) {
+            throw invalidRefreshTokenException()
+        }
+        if (refreshToken.token != request.refreshToken) {
+            throw invalidRefreshTokenException()
+        }
+        if (!userService.existsActiveById(userId)) {
+            throw invalidRefreshTokenException()
+        }
+
+        refreshToken.markUsed(LocalDateTime.now())
 
         return RefreshTokenResponse(accessToken = jwtProvider.generateAccessToken(userId))
     }
@@ -103,6 +136,38 @@ class AuthService(
         )
 
         return user
+    }
+
+    private fun saveRefreshToken(
+        user: User,
+        token: String,
+        deviceId: String,
+        deviceName: String?,
+        expiresAt: LocalDateTime,
+    ) {
+        val userId = requireNotNull(user.id) { "User id must be generated before saving refresh token." }
+        val refreshToken = refreshTokenRepository.findByUserIdAndDeviceId(
+            userId = userId,
+            deviceId = deviceId,
+        )
+
+        if (refreshToken == null) {
+            refreshTokenRepository.save(
+                RefreshToken(
+                    user = user,
+                    token = token,
+                    deviceId = deviceId,
+                    deviceName = deviceName,
+                    expiresAt = expiresAt,
+                )
+            )
+        } else {
+            refreshToken.replaceToken(
+                token = token,
+                expiresAt = expiresAt,
+                deviceName = deviceName,
+            )
+        }
     }
 
     private fun invalidRefreshTokenException(): MonomarketException {

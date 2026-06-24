@@ -2,6 +2,7 @@ package com.knowave.monomarket.domains.user.service
 
 import com.knowave.monomarket.common.exception.MonomarketException
 import com.knowave.monomarket.common.enum.SocialProvider
+import com.knowave.monomarket.common.enum.UserStatus
 import com.knowave.monomarket.domains.user.entity.User
 import com.knowave.monomarket.domains.user.dto.UserMeResponse
 import com.knowave.monomarket.domains.user.repository.UserRepository
@@ -32,6 +33,13 @@ class UserService(
     @Transactional(readOnly = true)
     fun existsById(userId: UUID): Boolean {
         return userRepository.existsById(userId)
+    }
+
+    @Transactional(readOnly = true)
+    fun existsActiveById(userId: UUID): Boolean {
+        return userRepository.findById(userId)
+            .map { it.status == UserStatus.ACTIVE.name }
+            .orElse(false)
     }
 
     @Transactional(readOnly = true)

@@ -10,4 +10,9 @@ data class SocialLoginRequest(
 
     @field:NotBlank
     val token: String,
+
+    @field:NotBlank
+    val deviceId: String,
+
+    val deviceName: String? = null,
 )

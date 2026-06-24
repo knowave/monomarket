@@ -36,7 +36,9 @@ class SecurityIntegrationTests @Autowired constructor(
                     """
                     {
                       "provider": "KAKAO",
-                      "token": "mock:public-user"
+                      "token": "mock:public-user",
+                      "deviceId": "ios-device-1",
+                      "deviceName": "iPhone"
                     }
                     """.trimIndent()
                 )

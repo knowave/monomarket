@@ -5,10 +5,12 @@ import com.knowave.monomarket.common.exception.MonomarketException
 import com.knowave.monomarket.domains.auth.dto.RefreshTokenRequest
 import com.knowave.monomarket.domains.auth.dto.SocialLoginRequest
 import com.knowave.monomarket.domains.auth.jwt.JwtProvider
+import com.knowave.monomarket.domains.auth.repository.RefreshTokenRepository
 import com.knowave.monomarket.domains.user.repository.SocialAccountRepository
 import com.knowave.monomarket.domains.user.repository.UserRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -24,6 +26,7 @@ class AuthServiceTests @Autowired constructor(
     private val jwtProvider: JwtProvider,
     private val userRepository: UserRepository,
     private val socialAccountRepository: SocialAccountRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
 ) {
     @Test
     fun `social login creates user and social account by provider user id`() {
@@ -31,20 +34,25 @@ class AuthServiceTests @Autowired constructor(
             SocialLoginRequest(
                 provider = SocialProvider.KAKAO,
                 token = "mock:123456",
+                deviceId = "ios-device-1",
+                deviceName = "iPhone",
             )
         )
 
         assertTrue(response.isNewUser)
         assertEquals(1, userRepository.count())
         assertEquals(1, socialAccountRepository.count())
+        assertEquals(1, refreshTokenRepository.count())
     }
 
     @Test
-    fun `social login returns existing user for same provider and provider user id`() {
+    fun `social login returns existing user and replaces refresh token row for same device`() {
         authService.socialLogin(
             SocialLoginRequest(
                 provider = SocialProvider.GOOGLE,
                 token = "mock:google-user",
+                deviceId = "android-device-1",
+                deviceName = "Galaxy",
             )
         )
 
@@ -52,12 +60,40 @@ class AuthServiceTests @Autowired constructor(
             SocialLoginRequest(
                 provider = SocialProvider.GOOGLE,
                 token = "mock:google-user",
+                deviceId = "android-device-1",
+                deviceName = "Galaxy renamed",
             )
         )
 
         assertFalse(secondResponse.isNewUser)
         assertEquals(1, userRepository.count())
         assertEquals(1, socialAccountRepository.count())
+        assertEquals(1, refreshTokenRepository.count())
+        assertEquals("Galaxy renamed", refreshTokenRepository.findByToken(secondResponse.refreshToken)?.deviceName)
+    }
+
+    @Test
+    fun `social login creates separate refresh token rows for different devices`() {
+        authService.socialLogin(
+            SocialLoginRequest(
+                provider = SocialProvider.GOOGLE,
+                token = "mock:multi-device-user",
+                deviceId = "ios-device",
+            )
+        )
+
+        val secondResponse = authService.socialLogin(
+            SocialLoginRequest(
+                provider = SocialProvider.GOOGLE,
+                token = "mock:multi-device-user",
+                deviceId = "android-device",
+            )
+        )
+
+        assertFalse(secondResponse.isNewUser)
+        assertEquals(1, userRepository.count())
+        assertEquals(1, socialAccountRepository.count())
+        assertEquals(2, refreshTokenRepository.count())
     }
 
     @Test
@@ -67,6 +103,48 @@ class AuthServiceTests @Autowired constructor(
                 SocialLoginRequest(
                     provider = SocialProvider.APPLE,
                     token = "invalid-token",
+                    deviceId = "ios-device-1",
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `refresh issues access token and updates last used at`() {
+        val loginResponse = authService.socialLogin(
+            SocialLoginRequest(
+                provider = SocialProvider.KAKAO,
+                token = "mock:refresh-user",
+                deviceId = "ios-device-1",
+            )
+        )
+
+        val response = authService.refresh(
+            RefreshTokenRequest(
+                refreshToken = loginResponse.refreshToken,
+                deviceId = "ios-device-1",
+            )
+        )
+
+        assertTrue(jwtProvider.validateToken(response.accessToken))
+        assertNotNull(refreshTokenRepository.findByToken(loginResponse.refreshToken)?.lastUsedAt)
+    }
+
+    @Test
+    fun `refresh rejects mismatched device id`() {
+        val loginResponse = authService.socialLogin(
+            SocialLoginRequest(
+                provider = SocialProvider.KAKAO,
+                token = "mock:mismatched-device-user",
+                deviceId = "ios-device-1",
+            )
+        )
+
+        assertThrows<MonomarketException> {
+            authService.refresh(
+                RefreshTokenRequest(
+                    refreshToken = loginResponse.refreshToken,
+                    deviceId = "android-device-1",
                 )
             )
         }
@@ -77,7 +155,12 @@ class AuthServiceTests @Autowired constructor(
         val accessToken = jwtProvider.generateAccessToken(UUID.randomUUID())
 
         assertThrows<MonomarketException> {
-            authService.refresh(RefreshTokenRequest(refreshToken = accessToken))
+            authService.refresh(
+                RefreshTokenRequest(
+                    refreshToken = accessToken,
+                    deviceId = "ios-device-1",
+                )
+            )
         }
     }
 }

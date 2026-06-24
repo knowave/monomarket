@@ -23,14 +23,19 @@ class JwtProvider(
             userId = userId,
             tokenType = JwtTokenType.ACCESS,
             expiresAt = Instant.now().plus(jwtProperties.accessTokenExpirationMinutes, ChronoUnit.MINUTES),
-        )
+        ).token
     }
 
     fun generateRefreshToken(userId: UUID): String {
+        return issueRefreshToken(userId).token
+    }
+
+    fun issueRefreshToken(userId: UUID): IssuedJwtToken {
+        val expiresAt = Instant.now().plus(jwtProperties.refreshTokenExpirationDays, ChronoUnit.DAYS)
         return generateToken(
             userId = userId,
             tokenType = JwtTokenType.REFRESH,
-            expiresAt = Instant.now().plus(jwtProperties.refreshTokenExpirationDays, ChronoUnit.DAYS),
+            expiresAt = expiresAt,
         )
     }
 
@@ -61,22 +66,31 @@ class JwtProvider(
         return JwtTokenType.valueOf(tokenType)
     }
 
+    fun isRefreshToken(token: String): Boolean {
+        return runCatching { extractTokenType(token) == JwtTokenType.REFRESH }
+            .getOrDefault(false)
+    }
+
     private fun generateToken(
         userId: UUID,
         tokenType: JwtTokenType,
         expiresAt: Instant,
-    ): String {
+    ): IssuedJwtToken {
         val now = Instant.now()
         val claims = JwtClaimsSet.builder()
             .issuedAt(now)
             .expiresAt(expiresAt)
             .subject(userId.toString())
+            .id(UUID.randomUUID().toString())
             .claim(USER_ID_CLAIM, userId.toString())
             .claim(TOKEN_TYPE_CLAIM, tokenType.name)
             .build()
         val headers = JwsHeader.with(MacAlgorithm.HS256).build()
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(headers, claims)).tokenValue
+        return IssuedJwtToken(
+            token = jwtEncoder.encode(JwtEncoderParameters.from(headers, claims)).tokenValue,
+            expiresAt = expiresAt,
+        )
     }
 
     companion object {
