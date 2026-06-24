@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: monomarket
+  datasource:
+    url: "jdbc:h2:mem:monomarket;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;NON_KEYWORDS=USER,USERS;DB_CLOSE_DELAY=-1"
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+monomarket:
+  jwt:
+    secret: monomarket-test-secret-key-with-at-least-thirty-two-bytes
+    access-token-expiration-minutes: 60
+    refresh-token-expiration-days: 30
