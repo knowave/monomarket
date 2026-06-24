@@ -3,6 +3,10 @@ spring:
     import: optional:file:.env[.properties]
   application:
     name: monomarket
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
   datasource:
     url: ${DB_URL}
     driver-class-name: ${DB_DRIVER_CLASS_NAME}
@@ -23,6 +27,7 @@ monomarket:
     secret-key: ${AWS_SECRET_ACCESS_KEY}
     s3:
       bucket: ${AWS_S3_BUCKET}
+      cdn-base-url: ${AWS_S3_CDN_BASE_URL}
   oauth:
     google:
       client-id: ${GOOGLE_OAUTH_CLIENT_ID}

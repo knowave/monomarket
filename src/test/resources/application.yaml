@@ -15,3 +15,10 @@ monomarket:
     secret: monomarket-test-secret-key-with-at-least-thirty-two-bytes
     access-token-expiration-minutes: 60
     refresh-token-expiration-days: 30
+  aws:
+    region: ap-northeast-2
+    access-key: test-access-key
+    secret-key: test-secret-key
+    s3:
+      bucket: test-bucket
+      cdn-base-url: https://cdn.example.com

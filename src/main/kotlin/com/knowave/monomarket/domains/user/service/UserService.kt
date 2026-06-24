@@ -37,9 +37,7 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun existsActiveById(userId: UUID): Boolean {
-        return userRepository.findById(userId)
-            .map { it.status == UserStatus.ACTIVE.name }
-            .orElse(false)
+        return userRepository.existsByIdAndStatus(userId, UserStatus.ACTIVE.name)
     }
 
     @Transactional(readOnly = true)
