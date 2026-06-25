@@ -20,7 +20,7 @@ class UploadService(
         validateImageFile(file)
 
         val extension = extractExtension(file)
-        val objectKey = "temp/$userId/${UUID.randomUUID()}.$extension"
+        val objectKey = "temp/products/$userId/${UUID.randomUUID()}.$extension"
         val uploadedObjectKey = s3Service.upload(objectKey, file)
 
         return UploadImageResponse(

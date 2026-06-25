@@ -50,4 +50,13 @@ class S3Service(
             .build()
         s3Client.deleteObject(deleteRequest)
     }
+
+    fun deleteObject(objectKey: String) {
+        val request = DeleteObjectRequest.builder()
+            .bucket(properties.s3.bucket)
+            .key(objectKey)
+            .build()
+
+        s3Client.deleteObject(request)
+    }
 }

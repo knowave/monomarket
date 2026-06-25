@@ -31,8 +31,8 @@ class ProductImage(
     @JoinColumn(name = "product_id", nullable = false)
     val product: Product,
 
-    @Column(nullable = false, length = 500)
-    var imageUrl: String,
+    @Column(name = "object_key", nullable = false, length = 500)
+    var objectKey: String,
 
     @Column(name = "sort_order", nullable = false)
     var sortOrder: Int,
