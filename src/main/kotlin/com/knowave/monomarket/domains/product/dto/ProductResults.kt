@@ -3,7 +3,7 @@ package com.knowave.monomarket.domains.product.dto
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class ProductCreateResponse(
+data class ProductCreateResult(
     val id: UUID,
     val title: String,
     val description: String,
@@ -14,13 +14,13 @@ data class ProductCreateResponse(
     val createdAt: LocalDateTime,
 )
 
-data class ProductDetailResponse(
+data class ProductDetailResult(
     val id: UUID,
     val title: String,
     val description: String,
     val price: Long,
     val status: String,
-    val seller: SellerSummaryResponse,
+    val seller: SellerSummaryResult,
     val imageUrls: List<String>,
     val viewCount: Long,
     val favoriteCount: Long,
@@ -28,20 +28,20 @@ data class ProductDetailResponse(
     val updatedAt: LocalDateTime,
 )
 
-data class ProductListItemResponse(
+data class ProductListItemResult(
     val id: UUID,
     val title: String,
     val price: Long,
     val status: String,
-    val seller: SellerSummaryResponse,
+    val seller: SellerSummaryResult,
     val thumbnailUrl: String?,
     val viewCount: Long,
     val favoriteCount: Long,
     val createdAt: LocalDateTime,
 )
 
-data class ProductPageResponse(
-    val items: List<ProductListItemResponse>,
+data class ProductPageResult(
+    val items: List<ProductListItemResult>,
     val page: Int,
     val size: Int,
     val totalElements: Long,
@@ -49,7 +49,7 @@ data class ProductPageResponse(
     val hasNext: Boolean,
 )
 
-data class GetManyProductByQueryItemResponse(
+data class GetManyProductByQueryItemResult(
     val productId: UUID,
     val title: String,
     val price: Long,
@@ -62,8 +62,8 @@ data class GetManyProductByQueryItemResponse(
     val isFavorite: Boolean,
 )
 
-data class GetManyProductByQueryResponse(
-    val content: List<GetManyProductByQueryItemResponse>,
+data class GetManyProductByQueryResult(
+    val content: List<GetManyProductByQueryItemResult>,
     val page: Int,
     val size: Int,
     val totalElements: Long,
@@ -71,7 +71,7 @@ data class GetManyProductByQueryResponse(
     val hasNext: Boolean,
 )
 
-data class SellerSummaryResponse(
+data class SellerSummaryResult(
     val id: UUID,
     val nickname: String,
 )

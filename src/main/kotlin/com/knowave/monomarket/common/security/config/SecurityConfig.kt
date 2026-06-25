@@ -32,6 +32,7 @@ class SecurityConfig(
             .authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.POST, "/api/v1/auth/social-login").permitAll()
                 it.requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
+                it.requestMatchers(HttpMethod.GET, "/api/v1/products/query").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/api/v1/products", "/api/v1/products/*").permitAll()
                 it.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                 it.anyRequest().authenticated()

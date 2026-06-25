@@ -1,6 +1,6 @@
 package com.knowave.monomarket.domains.favorite.dto
 
-data class FavoriteToggleResponse(
+data class ProductFavoriteToggleResponse(
     val isFavorite: Boolean,
     val favoriteCount: Long,
 )

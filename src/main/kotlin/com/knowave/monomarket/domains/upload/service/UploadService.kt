@@ -2,7 +2,7 @@ package com.knowave.monomarket.domains.upload.service
 
 import com.knowave.monomarket.common.config.S3Properties
 import com.knowave.monomarket.domains.aws.service.S3Service
-import com.knowave.monomarket.domains.upload.dto.UploadImageResponse
+import com.knowave.monomarket.domains.upload.dto.UploadImageResult
 import com.knowave.monomarket.domains.upload.exception.UploadExceptions
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -16,14 +16,14 @@ class UploadService(
     fun uploadTempImage(
         userId: UUID,
         file: MultipartFile,
-    ): UploadImageResponse {
+    ): UploadImageResult {
         validateImageFile(file)
 
         val extension = extractExtension(file)
         val objectKey = "temp/products/$userId/${UUID.randomUUID()}.$extension"
         val uploadedObjectKey = s3Service.upload(objectKey, file)
 
-        return UploadImageResponse(
+        return UploadImageResult(
             objectKey = uploadedObjectKey,
             imageUrl = buildImageUrl(uploadedObjectKey),
         )

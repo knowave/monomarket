@@ -2,10 +2,10 @@ package com.knowave.monomarket.domains.auth.service
 
 import com.knowave.monomarket.common.enum.SocialProvider
 import com.knowave.monomarket.common.exception.MonomarketException
-import com.knowave.monomarket.domains.auth.dto.RefreshTokenRequest
-import com.knowave.monomarket.domains.auth.dto.RefreshTokenResponse
-import com.knowave.monomarket.domains.auth.dto.SocialLoginRequest
-import com.knowave.monomarket.domains.auth.dto.SocialLoginResponse
+import com.knowave.monomarket.domains.auth.dto.RefreshTokenCommand
+import com.knowave.monomarket.domains.auth.dto.RefreshTokenResult
+import com.knowave.monomarket.domains.auth.dto.SocialLoginCommand
+import com.knowave.monomarket.domains.auth.dto.SocialLoginResult
 import com.knowave.monomarket.domains.auth.dto.SocialUserInfo
 import com.knowave.monomarket.domains.auth.entity.RefreshToken
 import com.knowave.monomarket.domains.auth.jwt.JwtProvider
@@ -31,9 +31,9 @@ class AuthService(
     private val jwtProvider: JwtProvider,
 ) {
     @Transactional
-    fun socialLogin(request: SocialLoginRequest): SocialLoginResponse {
-        val socialUserInfo = selectVerifier(request.provider).verify(request.token)
-        if (socialUserInfo.provider != request.provider) {
+    fun socialLogin(command: SocialLoginCommand): SocialLoginResult {
+        val socialUserInfo = selectVerifier(command.provider).verify(command.token)
+        if (socialUserInfo.provider != command.provider) {
             throw MonomarketException(
                 errorCode = "SOCIAL_PROVIDER_MISMATCH",
                 message = "Social provider does not match verified token.",
@@ -61,12 +61,12 @@ class AuthService(
         saveRefreshToken(
             user = user,
             token = refreshToken.token,
-            deviceId = request.deviceId,
-            deviceName = request.deviceName,
+            deviceId = command.deviceId,
+            deviceName = command.deviceName,
             expiresAt = LocalDateTime.ofInstant(refreshToken.expiresAt, ZoneId.systemDefault()),
         )
 
-        return SocialLoginResponse(
+        return SocialLoginResult(
             accessToken = jwtProvider.generateAccessToken(userId),
             refreshToken = refreshToken.token,
             isNewUser = isNewUser,
@@ -74,23 +74,23 @@ class AuthService(
     }
 
     @Transactional(readOnly = true)
-    fun refresh(request: RefreshTokenRequest): RefreshTokenResponse {
-        if (!jwtProvider.validateToken(request.refreshToken)) {
+    fun refresh(command: RefreshTokenCommand): RefreshTokenResult {
+        if (!jwtProvider.validateToken(command.refreshToken)) {
             throw invalidRefreshTokenException()
         }
 
-        val tokenType = jwtProvider.extractTokenType(request.refreshToken)
+        val tokenType = jwtProvider.extractTokenType(command.refreshToken)
         if (tokenType != JwtTokenType.REFRESH) {
             throw invalidRefreshTokenException()
         }
 
-        val userId = jwtProvider.extractUserId(request.refreshToken)
-        val refreshToken = refreshTokenRepository.findByToken(request.refreshToken)
+        val userId = jwtProvider.extractUserId(command.refreshToken)
+        val refreshToken = refreshTokenRepository.findByToken(command.refreshToken)
             ?: throw invalidRefreshTokenException()
         if (refreshToken.user.id != userId) {
             throw invalidRefreshTokenException()
         }
-        if (refreshToken.deviceId != request.deviceId) {
+        if (refreshToken.deviceId != command.deviceId) {
             throw invalidRefreshTokenException()
         }
         if (refreshToken.revokedAt != null) {
@@ -99,7 +99,7 @@ class AuthService(
         if (refreshToken.expiresAt.isBefore(LocalDateTime.now())) {
             throw invalidRefreshTokenException()
         }
-        if (refreshToken.token != request.refreshToken) {
+        if (refreshToken.token != command.refreshToken) {
             throw invalidRefreshTokenException()
         }
         if (!userService.existsActiveById(userId)) {
@@ -108,7 +108,7 @@ class AuthService(
 
         refreshToken.markUsed(LocalDateTime.now())
 
-        return RefreshTokenResponse(accessToken = jwtProvider.generateAccessToken(userId))
+        return RefreshTokenResult(accessToken = jwtProvider.generateAccessToken(userId))
     }
 
     private fun selectVerifier(provider: SocialProvider): SocialTokenVerifier {

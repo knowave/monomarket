@@ -3,8 +3,8 @@ package com.knowave.monomarket.domains.user.service
 import com.knowave.monomarket.common.exception.MonomarketException
 import com.knowave.monomarket.common.enum.SocialProvider
 import com.knowave.monomarket.common.enum.UserStatus
+import com.knowave.monomarket.domains.user.dto.UserMeResult
 import com.knowave.monomarket.domains.user.entity.User
-import com.knowave.monomarket.domains.user.dto.UserMeResponse
 import com.knowave.monomarket.domains.user.repository.UserRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -41,10 +41,10 @@ class UserService(
     }
 
     @Transactional(readOnly = true)
-    fun getMe(userId: UUID): UserMeResponse {
+    fun getMe(userId: UUID): UserMeResult {
         val user = getUser(userId)
 
-        return UserMeResponse(
+        return UserMeResult(
             id = requireNotNull(user.id),
             nickname = user.nickname,
         )
