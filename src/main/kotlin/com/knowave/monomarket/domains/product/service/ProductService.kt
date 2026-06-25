@@ -92,6 +92,12 @@ class ProductService(
     }
 
     @Transactional
+    fun getProductForFavoriteUpdate(productId: UUID): Product {
+        return productRepository.findByIdForUpdate(productId)
+            ?: throw ProductExceptions.notFound()
+    }
+
+    @Transactional
     fun updateProduct(
         productId: UUID,
         userId: UUID,

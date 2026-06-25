@@ -55,6 +55,10 @@ class Product(
         favoriteCount += 1
     }
 
+    fun decreaseFavoriteCount() {
+        favoriteCount = (favoriteCount - 1).coerceAtLeast(0)
+    }
+
     fun replaceImages(newImages: List<ProductImage>) {
         images.clear()
         images.addAll(newImages)

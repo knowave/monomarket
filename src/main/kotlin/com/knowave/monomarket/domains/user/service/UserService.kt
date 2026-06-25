@@ -42,18 +42,23 @@ class UserService(
 
     @Transactional(readOnly = true)
     fun getMe(userId: UUID): UserMeResponse {
-        val user = userRepository.findById(userId).orElseThrow {
+        val user = getUser(userId)
+
+        return UserMeResponse(
+            id = requireNotNull(user.id),
+            nickname = user.nickname,
+        )
+    }
+
+    @Transactional(readOnly = true)
+    fun getUser(userId: UUID): User {
+        return userRepository.findById(userId).orElseThrow {
             MonomarketException(
                 errorCode = "USER_NOT_FOUND",
                 message = "User not found.",
                 status = HttpStatus.NOT_FOUND,
             )
         }
-
-        return UserMeResponse(
-            id = requireNotNull(user.id),
-            nickname = user.nickname,
-        )
     }
 
     private fun createDefaultNickname(provider: SocialProvider, providerUserId: String): String {

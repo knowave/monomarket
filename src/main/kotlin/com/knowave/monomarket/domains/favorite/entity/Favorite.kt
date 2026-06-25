@@ -16,12 +16,10 @@ import jakarta.persistence.UniqueConstraint
     uniqueConstraints = [
         UniqueConstraint(
             name = "uk_favorite_user_product",
-            columnNames = ["user_id", "product_id"]
-
+            columnNames = ["user_id", "product_id"],
         )
-    ]
+    ],
 )
-
 class Favorite(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -30,4 +28,4 @@ class Favorite(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     val product: Product,
-    ) : BaseEntity()
+) : BaseEntity()
