@@ -77,7 +77,7 @@ class FavoriteService(
     }
 
     @Transactional(readOnly = true)
-    fun getFavorites(
+    fun getManyFavorite(
         userId: UUID,
         command: GetManyFavoriteCommand,
     ): FavoritePageResult {
@@ -99,6 +99,16 @@ class FavoriteService(
             totalElements = favorites.totalElements,
             totalPages = favorites.totalPages,
         )
+    }
+
+    @Transactional
+    fun deleteManyFavoriteByUser(userId: UUID) {
+        favoriteRepository.deleteManyFavoriteByUser(userId)
+    }
+
+    @Transactional
+    fun deleteManyFavoriteByProductSeller(sellerId: UUID) {
+        favoriteRepository.deleteManyFavoriteByProductSeller(sellerId)
     }
 
     private fun toListItemResponse(product: Product): FavoriteListItemResult {

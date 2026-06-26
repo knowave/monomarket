@@ -55,6 +55,9 @@ interface ProductRepository : JpaRepository<Product, UUID>, JpaSpecificationExec
         offset: Long,
     ): List<GetManyProductByQueryRow>
 
+    @EntityGraph(attributePaths = ["images"])
+    fun findManyProductBySellerId(sellerId: UUID): List<Product>
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :productId")
     fun findByIdForUpdate(productId: UUID): Product?

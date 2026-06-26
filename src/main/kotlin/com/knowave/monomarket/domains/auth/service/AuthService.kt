@@ -12,9 +12,8 @@ import com.knowave.monomarket.domains.auth.jwt.JwtProvider
 import com.knowave.monomarket.domains.auth.jwt.JwtTokenType
 import com.knowave.monomarket.domains.auth.provider.SocialTokenVerifier
 import com.knowave.monomarket.domains.auth.repository.RefreshTokenRepository
-import com.knowave.monomarket.domains.user.entity.SocialAccount
 import com.knowave.monomarket.domains.user.entity.User
-import com.knowave.monomarket.domains.user.repository.SocialAccountRepository
+import com.knowave.monomarket.domains.user.service.SocialAccountService
 import com.knowave.monomarket.domains.user.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -25,7 +24,7 @@ import java.time.ZoneId
 @Service
 class AuthService(
     private val socialTokenVerifiers: List<SocialTokenVerifier>,
-    private val socialAccountRepository: SocialAccountRepository,
+    private val socialAccountService: SocialAccountService,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val userService: UserService,
     private val jwtProvider: JwtProvider,
@@ -41,7 +40,7 @@ class AuthService(
             )
         }
 
-        val socialAccount = socialAccountRepository.findByProviderAndProviderUserId(
+        val socialAccount = socialAccountService.getSocialAccount(
             provider = socialUserInfo.provider.name,
             providerUserId = socialUserInfo.providerUserId,
         )
@@ -126,13 +125,11 @@ class AuthService(
             providerUserId = socialUserInfo.providerUserId,
             profileImageUrl = socialUserInfo.profileImageUrl,
         )
-        socialAccountRepository.save(
-            SocialAccount(
-                user = user,
-                provider = socialUserInfo.provider.name,
-                providerUserId = socialUserInfo.providerUserId,
-                email = socialUserInfo.email,
-            )
+        socialAccountService.createSocialAccount(
+            user = user,
+            provider = socialUserInfo.provider.name,
+            providerUserId = socialUserInfo.providerUserId,
+            email = socialUserInfo.email,
         )
 
         return user

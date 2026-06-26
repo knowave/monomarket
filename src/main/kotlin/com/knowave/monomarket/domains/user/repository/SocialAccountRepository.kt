@@ -6,4 +6,6 @@ import java.util.UUID
 
 interface SocialAccountRepository : JpaRepository<SocialAccount, UUID> {
     fun findByProviderAndProviderUserId(provider: String, providerUserId: String): SocialAccount?
+
+    fun deleteAllByUserId(userId: UUID)
 }

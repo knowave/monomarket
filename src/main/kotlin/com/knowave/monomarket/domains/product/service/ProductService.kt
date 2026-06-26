@@ -20,7 +20,7 @@ import com.knowave.monomarket.domains.product.entity.ProductImage
 import com.knowave.monomarket.domains.product.exception.ProductExceptions
 import com.knowave.monomarket.domains.product.repository.ProductRepository
 import com.knowave.monomarket.domains.user.entity.User
-import com.knowave.monomarket.domains.user.repository.UserRepository
+import com.knowave.monomarket.domains.user.service.UserService
 import jakarta.persistence.criteria.Predicate
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -32,7 +32,7 @@ import java.util.UUID
 @Service
 class ProductService(
     private val productRepository: ProductRepository,
-    private val userRepository: UserRepository,
+    private val userService: UserService,
     private val s3Service: S3Service,
     private val s3Properties: S3Properties,
 ) {
@@ -41,8 +41,7 @@ class ProductService(
         userId: UUID,
         command: ProductCreateCommand,
     ): ProductCreateResult {
-        val seller = userRepository.findById(userId)
-            .orElseThrow { ProductExceptions.userNotFound() }
+        val seller = userService.getUser(userId)
         val product = productRepository.save(
             Product(
                 seller = seller,
@@ -181,6 +180,17 @@ class ProductService(
         deleteObjects(objectKeys)
         // TODO: In production, use an outbox/retry queue to retry S3 deletes and compensate failed DB deletes.
         productRepository.delete(product)
+    }
+
+    @Transactional
+    fun deleteManyProductBySeller(sellerId: UUID) {
+        val products = productRepository.findManyProductBySellerId(sellerId)
+        val objectKeys = products.flatMap { product ->
+            product.images.map { image -> image.objectKey }
+        }
+
+        deleteObjects(objectKeys)
+        productRepository.deleteAll(products)
     }
 
     private fun replaceImages(

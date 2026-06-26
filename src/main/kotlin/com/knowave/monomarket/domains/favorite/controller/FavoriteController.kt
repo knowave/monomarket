@@ -35,11 +35,11 @@ class FavoriteController(
     }
 
     @PostMapping("/list")
-    fun getFavorites(
+    fun getManyFavorite(
         @AuthenticationPrincipal principal: CustomUserPrincipal,
         @Valid @RequestBody request: FavoriteListRequest,
     ): FavoritePageResponse {
-        return favoriteService.getFavorites(
+        return favoriteService.getManyFavorite(
             userId = principal.userId,
             command = request.toCommand(),
         ).toResponse()
