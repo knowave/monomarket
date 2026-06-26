@@ -132,6 +132,12 @@ class ProductService(
             ?: throw ProductExceptions.notFound()
     }
 
+    @Transactional(readOnly = true)
+    fun getProductForChatRoom(productId: UUID): Product {
+        return productRepository.findProductById(productId)
+            ?: throw ProductExceptions.notFound()
+    }
+
     @Transactional
     fun updateProduct(
         productId: UUID,

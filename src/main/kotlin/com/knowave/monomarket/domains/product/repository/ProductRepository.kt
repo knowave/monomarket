@@ -58,6 +58,9 @@ interface ProductRepository : JpaRepository<Product, UUID>, JpaSpecificationExec
     @EntityGraph(attributePaths = ["images"])
     fun findManyProductBySellerId(sellerId: UUID): List<Product>
 
+    @EntityGraph(attributePaths = ["seller"])
+    fun findProductById(id: UUID): Product?
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :productId")
     fun findByIdForUpdate(productId: UUID): Product?
