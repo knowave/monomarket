@@ -1,5 +1,6 @@
 package com.knowave.monomarket.domains.chat.service
 
+import com.knowave.monomarket.common.config.S3Properties
 import com.knowave.monomarket.domains.chat.dto.ChatMessageResult
 import com.knowave.monomarket.domains.chat.dto.ChatParticipantResult
 import com.knowave.monomarket.domains.chat.dto.ChatRoomSummaryResult
@@ -35,6 +36,7 @@ class ChatService(
     private val chatMessageRepository: ChatMessageRepository,
     private val userService: UserService,
     private val productService: ProductService,
+    private val s3Properties: S3Properties,
 ) {
     private val maxPageSize = 100
 
@@ -225,6 +227,7 @@ class ChatService(
             productTitle = row.productTitle,
             productPrice = row.productPrice,
             productStatus = row.productStatus,
+            productThumbnailUrl = row.productThumbnailObjectKey?.let { buildImageUrl(it) },
             buyer = ChatParticipantResult(
                 id = UUID.fromString(row.buyerId),
                 nickname = row.buyerNickname,
@@ -258,6 +261,10 @@ class ChatService(
             id = requireNotNull(user.id),
             nickname = user.nickname,
         )
+    }
+
+    private fun buildImageUrl(objectKey: String): String {
+        return "${s3Properties.s3.cdnBaseUrl.trimEnd('/')}/$objectKey"
     }
 
     private fun calculateTotalPages(

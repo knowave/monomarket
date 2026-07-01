@@ -30,6 +30,7 @@ interface ChatRoomRepository : JpaRepository<ChatRoom, UUID> {
                 buyer.nickname as "buyerNickname",
                 cast(seller.id as varchar) as "sellerId",
                 seller.nickname as "sellerNickname",
+                thumbnail.object_key as "productThumbnailObjectKey",
                 chat_room.last_message as "lastMessage",
                 chat_room.last_message_at as "lastMessageAt",
                 chat_room.created_at as "createdAt",
@@ -38,6 +39,9 @@ interface ChatRoomRepository : JpaRepository<ChatRoom, UUID> {
             join products product on product.id = chat_room.product_id
             join users buyer on buyer.id = chat_room.buyer_id
             join users seller on seller.id = chat_room.seller_id
+            left join product_images thumbnail
+                on thumbnail.product_id = product.id
+               and thumbnail.sort_order = 0
             where chat_room.buyer_id = :userId
                or chat_room.seller_id = :userId
             order by coalesce(chat_room.last_message_at, chat_room.created_at) desc,

@@ -1,5 +1,6 @@
 package com.knowave.monomarket.domains.chat.controller
 
+import com.knowave.monomarket.common.config.S3Properties
 import com.knowave.monomarket.domains.auth.principal.CustomUserPrincipal
 import com.knowave.monomarket.domains.chat.dto.ChatMessageResponse
 import com.knowave.monomarket.domains.chat.dto.ChatParticipantResult
@@ -46,6 +47,7 @@ class ChatWebSocketControllerTests {
             chatMessageRepository = mock(ChatMessageRepository::class.java),
             userService = mock(UserService::class.java),
             productService = mock(ProductService::class.java),
+            s3Properties = mock(S3Properties::class.java),
         ) {
             override fun sendChatMessage(command: SendChatMessageCommand): SendChatMessageResult {
                 capturedCommand = command
@@ -78,6 +80,7 @@ class ChatWebSocketControllerTests {
         assertEquals(chatMessageId, response.messageId)
         assertEquals(chatRoomId, response.chatRoomId)
         assertEquals(senderId, response.senderId)
+        assertEquals("buyer", response.senderNickname)
         assertEquals("TEXT", response.messageType)
         assertEquals(createdAt, response.createdAt)
     }

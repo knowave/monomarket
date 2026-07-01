@@ -64,6 +64,7 @@ class ChatWebSocketController(
             messageId = chatMessageId,
             chatRoomId = chatRoomId,
             senderId = sender.id,
+            senderNickname = sender.nickname,
             messageType = messageType,
             content = content,
             createdAt = createdAt,

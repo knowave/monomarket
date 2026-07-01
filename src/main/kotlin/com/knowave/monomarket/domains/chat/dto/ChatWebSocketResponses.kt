@@ -7,6 +7,7 @@ data class ChatMessageResponse(
     val messageId: UUID,
     val chatRoomId: UUID,
     val senderId: UUID,
+    val senderNickname: String,
     val messageType: String,
     val content: String,
     val createdAt: LocalDateTime,

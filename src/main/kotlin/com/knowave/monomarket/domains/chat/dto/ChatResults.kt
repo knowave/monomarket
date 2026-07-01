@@ -25,6 +25,7 @@ data class ChatRoomSummaryResult(
     val productTitle: String,
     val productPrice: Long,
     val productStatus: String,
+    val productThumbnailUrl: String?,
     val buyer: ChatParticipantResult,
     val seller: ChatParticipantResult,
     val lastMessage: String?,

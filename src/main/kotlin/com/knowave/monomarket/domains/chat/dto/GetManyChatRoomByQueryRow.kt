@@ -12,6 +12,7 @@ interface GetManyChatRoomByQueryRow {
     val buyerNickname: String
     val sellerId: String
     val sellerNickname: String
+    val productThumbnailObjectKey: String?
     val lastMessage: String?
     val lastMessageAt: LocalDateTime?
     val createdAt: LocalDateTime

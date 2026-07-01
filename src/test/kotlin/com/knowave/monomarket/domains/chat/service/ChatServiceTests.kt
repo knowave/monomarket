@@ -8,6 +8,7 @@ import com.knowave.monomarket.domains.chat.dto.SendChatMessageCommand
 import com.knowave.monomarket.domains.chat.repository.ChatMessageRepository
 import com.knowave.monomarket.domains.chat.repository.ChatRoomRepository
 import com.knowave.monomarket.domains.product.entity.Product
+import com.knowave.monomarket.domains.product.entity.ProductImage
 import com.knowave.monomarket.domains.product.repository.ProductRepository
 import com.knowave.monomarket.domains.user.entity.User
 import com.knowave.monomarket.domains.user.repository.UserRepository
@@ -164,7 +165,7 @@ class ChatServiceTests @Autowired constructor(
         val seller = createUser("seller")
         val buyer = createUser("buyer")
         val anotherBuyer = createUser("another")
-        val firstProduct = createProduct(seller, title = "first")
+        val firstProduct = createProduct(seller, title = "first", thumbnailObjectKey = "products/first-thumbnail.png")
         val secondProduct = createProduct(seller, title = "second")
         val excludedProduct = createProduct(seller, title = "excluded")
         val firstRoom = createChatRoom(buyer, firstProduct)
@@ -197,6 +198,11 @@ class ChatServiceTests @Autowired constructor(
         assertEquals(2, result.totalElements)
         assertEquals(listOf(secondRoom.chatRoomId, firstRoom.chatRoomId), result.content.map { it.chatRoomId })
         assertTrue(result.content.all { it.buyer.id == buyer.id || it.seller.id == buyer.id })
+        assertEquals(
+            "https://cdn.example.com/products/first-thumbnail.png",
+            result.content.single { it.chatRoomId == firstRoom.chatRoomId }.productThumbnailUrl,
+        )
+        assertEquals(null, result.content.single { it.chatRoomId == secondRoom.chatRoomId }.productThumbnailUrl)
     }
 
     @Test
@@ -252,8 +258,9 @@ class ChatServiceTests @Autowired constructor(
     private fun createProduct(
         seller: User,
         title: String = "product",
+        thumbnailObjectKey: String? = null,
     ): Product {
-        return productRepository.save(
+        val product = productRepository.save(
             Product(
                 seller = seller,
                 title = "${title}_${UUID.randomUUID().toString().take(8)}",
@@ -261,5 +268,13 @@ class ChatServiceTests @Autowired constructor(
                 price = 10_000,
             )
         )
+        if (thumbnailObjectKey != null) {
+            product.replaceImages(
+                listOf(ProductImage(product = product, objectKey = thumbnailObjectKey, sortOrder = 0))
+            )
+            productRepository.save(product)
+        }
+
+        return product
     }
 }
